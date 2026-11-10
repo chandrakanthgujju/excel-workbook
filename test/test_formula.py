@@ -28,6 +28,10 @@ class SheetFormulaTest(unittest.TestCase):
 	def setUp(self):
 		self.sheet = Sheet()
 
+	def test_formula_with_spaces_around_expression(self):
+		self.sheet.set_value("A1", "= 1+2")
+		self.assertEqual(self.sheet.get_value("A1"), 3)
+
 	def test_addition_and_division(self):
 		self.sheet.set_value("A1", "=1+2")
 		result = self.sheet.get_value("A1")
