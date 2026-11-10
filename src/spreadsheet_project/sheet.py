@@ -4,7 +4,8 @@ from spreadsheet_project.utils.cell_utils import (is_valid_cell_id,
 	EvaluatedCellValue, 
 	parse_number,
 	parse_formula,
-	parse_function
+	parse_function,
+	get_cell_ids
 	)
 from spreadsheet_project.utils.custom_errors import (InvalidCellIdError,
 	CircularFormulaError,
@@ -53,13 +54,21 @@ class Sheet:
 			dependants.discard(cell_id)
 		self._depends_on[cell_id] = set()
 		if isinstance(cell_value, str) and cell_value.startswith("="):
-			parsed_formula = parse_formula(cell_value[1:].strip())
-			if parsed_formula is not None:
-				left, _op, right = parsed_formula
-				for operand in (left, right):
-					if is_valid_cell_id(operand):
-						self._depends_on[cell_id].add(operand)
-						self._dependants.setdefault(operand, set()).add(cell_id)
+			expr = cell_value[1:].strip()
+			parsed_function = parse_function(expr)
+			if parsed_function is not None:
+				_func, start, end = parsed_function
+				refs = get_cell_ids(start, end)
+			else:
+				parsed_formula = parse_formula(expr)
+				refs = []
+				if parsed_formula is not None:
+					left, _op, right = parsed_formula
+					refs = [left, right]
+			for ref in refs:
+				if is_valid_cell_id(ref):
+					self._depends_on[cell_id].add(ref)
+					self._dependants.setdefault(ref, set()).add(cell_id)
 		self._invalidate(cell_id)
 
 	def _invalidate(self, cell_id: str) -> None:
@@ -120,15 +129,14 @@ class Sheet:
 			raise DivisionByZeroError("Division by zero")
 		return _OPERATORS[op](left_value, right_value)
 
-	def _evaluate_function(self, func, start, end, visited: set[str]) :
+	def _evaluate_function(self, func: str, start: str, end: str, visited: set[str]) -> int | float:
 		values = []
 		cell_ids = get_cell_ids(start, end)
 		for cell_id in cell_ids:
 			cell_val = self.get_value(cell_id, visited)
-			if cell_val is None or cell_val == "":
-				values.append(0)
-			if isinstance(cell_val, (int, float)):
-				values.append(cell_val)
+			if isinstance(cell_val, bool) or not isinstance(cell_val, (int, float)):
+				continue
+			values.append(cell_val)
 		if not values:
 			if func == "SUM":
 				return 0
