@@ -65,7 +65,7 @@ class Sheet:
 			self._cache.pop(current, None)
 			stack.extend(self._dependants.get(current, ()))
 
-def get_value(self, cell_id: str, visited: set[str]|None = None) -> EvaluatedCellValue:
+	def get_value(self, cell_id: str, visited: set[str]|None = None) -> EvaluatedCellValue:
 
 		if cell_id in self._cache:
 			return self._cache[cell_id]			
