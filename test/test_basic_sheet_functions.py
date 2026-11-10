@@ -11,7 +11,7 @@ class SpreadSheetBasicFunctions(unittest.TestCase):
 
 	def test_set_and_get(self):
 		self.sheet.set_value("A1", "1")
-		self.assertEqual(self.sheet.get_value("A1"), "1")
+		self.assertEqual(self.sheet.get_value("A1"), 1)
 
 	def test_invalid_cell_id_raises(self):
 		for cell_id in ("A0", "1A"):

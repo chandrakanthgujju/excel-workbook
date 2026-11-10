@@ -1,7 +1,8 @@
 from spreadsheet_project.cell import Cell
 
-from spreadsheet_project.utils.cell_utils import is_valid_cell_id, EvaluatedCellValue
-from spreadsheet_project.utils.custom_errors import InvalidCellIdError, CellNotPresentError
+from spreadsheet_project.utils.cell_utils import is_valid_cell_id, EvaluatedCellValue, parse_number
+from spreadsheet_project.utils.custom_errors import InvalidCellIdError, \
+CellNotPresentError, MethodNotImplementedError
 
 class Sheet:
 	def __init__(self)-> None:
@@ -20,4 +21,16 @@ class Sheet:
 	def get_value(self, cell_id: str) -> EvaluatedCellValue:
 		if cell_id not in self._cells:
 			return None
+
+		raw_value = self._cells[cell_id].cell_value
+
+		if parse_number(raw_value) is not None:
+			return parse_number(raw_value)
+
+		if raw_value.startswith("="):
+			return self._evaluate_formula(raw_value[1:])
+
 		return self._cells[cell_id].cell_value
+
+	def _evaluate_formula(raw_value:str) -> EvaluatedCellValue:
+		raise MethodNotImplementedError("evaluate formula method not yet implemented")

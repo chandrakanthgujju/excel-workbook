@@ -13,3 +13,15 @@ def is_valid_cell_id(cell_id: str) -> bool:
 	if cell_id_pattern_match is None:
 		return False
 	return True
+
+def parse_number(raw_value: str) -> int | float | None:
+	try:
+		float_result = float(raw_value)
+		return float_result
+	except :
+		try:
+			int_result = int(raw_value)
+			return int_result
+		except:
+			return None
+	return None

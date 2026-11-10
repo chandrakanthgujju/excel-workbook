@@ -6,3 +6,6 @@ class InvalidCellIdError(SpreadSheetError):
 
 class CellNotPresentError(SpreadSheetError):
 	pass
+
+class MethodNotImplementedError(SpreadSheetError):
+	pass
