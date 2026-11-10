@@ -3,7 +3,8 @@ from spreadsheet_project.cell import Cell
 from spreadsheet_project.utils.cell_utils import (is_valid_cell_id, 
 	EvaluatedCellValue, 
 	parse_number,
-	parse_formula
+	parse_formula,
+	parse_function
 	)
 from spreadsheet_project.utils.custom_errors import (InvalidCellIdError,
 	CircularFormulaError,
@@ -19,6 +20,13 @@ _OPERATORS = {
 	"-" : operator.sub,
 	"*" : operator.mul,
 	"/" : operator.truediv
+}
+
+AGGREGATORS = {
+	"SUM" : sum,
+	"MIN" : min,
+	"MAX" : max,
+	"AVG" : lambda x : sum(x)/len(x)
 }
 
 class Sheet:
@@ -98,6 +106,10 @@ class Sheet:
 	def _evaluate_formula(self, raw_value:str, visited: set[str]) -> EvaluatedCellValue:
 		if not isinstance(raw_value, str):
 			return None
+		parsed_function = parse_function(raw_value.strip())
+		if parsed_function is not None:
+			func, start, end = parsed_function
+			return self._evaluate_function(func, start, end, visited)
 		parsed_formula = parse_formula(raw_value.strip())
 		if parsed_formula is None:
 			raise InvalidFormulaError(f"{raw_value} is invalid formula")
@@ -107,6 +119,21 @@ class Sheet:
 		if right_value == 0 and op == '/':
 			raise DivisionByZeroError("Division by zero")
 		return _OPERATORS[op](left_value, right_value)
+
+	def _evaluate_function(self, func, start, end, visited: set[str]) :
+		values = []
+		cell_ids = get_cell_ids(start, end)
+		for cell_id in cell_ids:
+			cell_val = self.get_value(cell_id, visited)
+			if cell_val is None or cell_val == "":
+				values.append(0)
+			if isinstance(v, (int, float)):
+				values.append(v)
+		if not values:
+			if func == "SUM":
+				return 0
+			raise InvalidFormulaError(f"{func} of an empty range")
+		return AGGREGATORS[func](values)
 
 
 	def _get_operand_value(self, cell_value: str, visited: set[str]) -> int | float : 
