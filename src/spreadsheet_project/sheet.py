@@ -1,8 +1,7 @@
-from cell import Cell
-from ./utils/cell_utils import is_valid_cell_id
-from ./utils/custom_errors import InvalidCellIdError
-from ./utils/custom_errors import CellNotPresentError
-from ./utils/cell_utils import EvaluatedCellValue
+from spreadsheet_project.cell import Cell
+
+from spreadsheet_project.utils.cell_utils import is_valid_cell_id, EvaluatedCellValue
+from spreadsheet_project.utils.custom_errors import InvalidCellIdError, CellNotPresentError
 
 class Sheet:
 	def __init__(self)-> None:
