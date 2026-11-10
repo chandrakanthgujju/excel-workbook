@@ -9,7 +9,7 @@ class Sheet:
 
 	def _create_if_not_exists(self, cell_id: str) -> None:
 		if not is_valid_cell_id(cell_id):
-			raise InvalidCellIdError(f"{cell_id} is not in valid cell id formula")
+			raise InvalidCellIdError(f"{cell_id} is not in valid cell id format")
 		if cell_id not in self._cells:
 			self._cells[cell_id] = Cell(cell_id)
 
