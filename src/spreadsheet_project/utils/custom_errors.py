@@ -7,5 +7,14 @@ class InvalidCellIdError(SpreadSheetError):
 class CellNotPresentError(SpreadSheetError):
 	pass
 
-class MethodNotImplementedError(SpreadSheetError):
+class MalformedFormulaError(SpreadSheetError):
+	pass
+
+class DivisionByZeroError(SpreadSheetError):
+	pass
+
+class CircularReferenceError(SpreadSheetError):
+	pass
+
+class NonNumericCellError(SpreadSheetError):
 	pass
