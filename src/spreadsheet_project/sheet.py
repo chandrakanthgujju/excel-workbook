@@ -127,8 +127,8 @@ class Sheet:
 			cell_val = self.get_value(cell_id, visited)
 			if cell_val is None or cell_val == "":
 				values.append(0)
-			if isinstance(v, (int, float)):
-				values.append(v)
+			if isinstance(cell_val, (int, float)):
+				values.append(cell_val)
 		if not values:
 			if func == "SUM":
 				return 0
