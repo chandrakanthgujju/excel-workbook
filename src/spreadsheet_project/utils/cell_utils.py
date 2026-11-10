@@ -49,11 +49,13 @@ def parse_number(raw_value: str) -> int | float | None:
 	# if decimal_part:
 
 
-def parse_formula(raw_value: str) -> tuple[str, str, str]:
+def parse_formula(raw_value: str) -> tuple[str, str, str] | None:
 	formula_match = FORMULA_PATTERN.fullmatch(raw_value)
 	if formula_match is None:
 		return None
-	left, arithop, right = formula_match.groups()
+	left = formula_match.group("left")
+	arithop = formula_match.group("op")
+	right = formula_match.group("right")
 	return left, arithop, right
 
 
