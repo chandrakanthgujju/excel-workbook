@@ -15,13 +15,12 @@ def is_valid_cell_id(cell_id: str) -> bool:
 	return True
 
 def parse_number(raw_value: str) -> int | float | None:
+	if not isinstance(raw_value, str):
+		return None
 	try:
-		float_result = float(raw_value)
-		return float_result
-	except :
+		return int(raw_value)
+	except ValueError:
 		try:
-			int_result = int(raw_value)
-			return int_result
-		except:
+			return float(raw_value)
+		except ValueError:
 			return None
-	return None
