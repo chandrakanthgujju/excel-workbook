@@ -3,14 +3,9 @@ from .custom_errors import InvalidCellIdError
 
 CELL_ID_PATTERN_STRING = "[A-Z]+[1-9][0-9]*"
 CELL_ID_PATTERN = re.compile(CELL_ID_PATTERN_STRING)
-NUMBER_PATTERN_STRING = "-?\d+(?:\.\d+)?"
+NUMBER_PATTERN_STRING = r"-?\d+(?:\.\d+)?"
 NUMBER_PATTERN = re.compile(NUMBER_PATTERN_STRING)
-OPERATOR_PATTERN_STRING = "[+\\-*/]"
-
-# FORMULA_PATTERN = re.compile(rf"({NUMBER_PATTERN_STRING}|{CELL_ID_PATTERN_STRING})"
-# 	rf"\s*({OPERATOR_PATTERN_STRING})\s*"
-# 	rf"({NUMBER_PATTERN_STRING}|{CELL_ID_PATTERN_STRING})"
-# 	)
+OPERATOR_PATTERN_STRING = r"[+\-*/]"
 
 FORMULA_PATTERN = re.compile(
     rf"(?P<left>(?:{NUMBER_PATTERN_STRING}|{CELL_ID_PATTERN_STRING}))"
@@ -42,12 +37,6 @@ def parse_number(raw_value: str) -> int | float | None:
 	if "." in num_text:
 		return float(num_text)
 	return int(num_text)
-
-	
-
-	# decimal_part = num_match.group(1)
-	# if decimal_part:
-
 
 def parse_formula(raw_value: str) -> tuple[str, str, str] | None:
 	formula_match = FORMULA_PATTERN.fullmatch(raw_value)

@@ -5,8 +5,7 @@ from spreadsheet_project.utils.cell_utils import (is_valid_cell_id,
 	parse_number,
 	parse_formula
 	)
-from spreadsheet_project.utils.custom_errors import (InvalidCellIdError, 
-	CellNotPresentError, 
+from spreadsheet_project.utils.custom_errors import (InvalidCellIdError,
 	CircularFormulaError,
 	InvalidFormulaError,
 	DivisionByZeroError,
@@ -26,6 +25,8 @@ class Sheet:
 	def __init__(self)-> None:
 		self._cells: dict[str, Cell] = {}
 		self._cache: dict[str, EvaluatedCellValue] = {}
+		self._depends_on: dict[str, set[str]] = {}
+		self._dependants: dict[str, set[str]] = {}
 
 	def _create_if_not_exists(self, cell_id: str) -> None:
 		if not is_valid_cell_id(cell_id):
@@ -36,45 +37,33 @@ class Sheet:
 	def set_value(self, cell_id: str, cell_value: str) -> None:
 		self._create_if_not_exists(cell_id)
 		self._cells[cell_id].cell_value = cell_value
-		old_depended_on = self._cells[cell_id].depended_on	
-		for dependant_cell in old_depended_on:
-			self._cells[dependant_cell].dependants.discard(cell_id)
+		old_refs = set(self._depends_on.get(cell_id, ()))
+		for ref in old_refs:
+			dependants = self._dependants.get(ref)
+			if dependants is None:
+				continue
+			dependants.discard(cell_id)
+		self._depends_on[cell_id] = set()
 		if isinstance(cell_value, str) and cell_value.startswith("="):
 			parsed_formula = parse_formula(cell_value[1:].strip())
-			if parsed_formula is None:
-				raise InvalidFormulaError("Invalid formula")
-			left,op,right = parsed_formula
-			
-			if is_valid_cell_id(left):
-				self._cells[cell_id].depended_on.add(left)
-				self._create_if_not_exists(left)
-				self._cells[left].dependants.add(cell_id)
-			if is_valid_cell_id(right):
-				self._cells[cell_id].dependants.add(right)				
-				self._create_if_not_exists(right)
-				self._cells[right].dependants.add(cell_id)
-				
-		self._update_cache(cell_id)
+			if parsed_formula is not None:
+				left, _op, right = parsed_formula
+				for operand in (left, right):
+					if is_valid_cell_id(operand):
+						self._depends_on[cell_id].add(operand)
+						self._dependants.setdefault(operand, set()).add(cell_id)
+		self._invalidate(cell_id)
 
-	def _update_cache(self, cell_id: str) -> None:
-		stack = []
-		stack.append(cell_id)
-		updated_cells = set()
-
+	def _invalidate(self, cell_id: str) -> None:
+		stack = [cell_id]
+		seen: set[str] = set()
 		while stack:
-			current_cell_id = stack.pop()
-			if current_cell_id in updated_cells:
+			current = stack.pop()
+			if current in seen:
 				continue
-			updated_cells.add(current_cell_id)
-			self._cache.pop(current_cell_id, None)
-			for dep in self._cells[current_cell_id].dependants:
-				stack.append(dep)
-
-
-
-
-			
-
+			seen.add(current)
+			self._cache.pop(current, None)
+			stack.extend(self._dependants.get(current, ()))
 
 	def get_value(self, cell_id: str, visited: set[str]|None = None) -> EvaluatedCellValue:
 
@@ -109,7 +98,7 @@ class Sheet:
 	def _evaluate_formula(self, raw_value:str, visited: set[str]) -> EvaluatedCellValue:
 		if not isinstance(raw_value, str):
 			return None
-		parsed_formula = parse_formula(raw_value)
+		parsed_formula = parse_formula(raw_value.strip())
 		if parsed_formula is None:
 			raise InvalidFormulaError(f"{raw_value} is invalid formula")
 		left, op, right = parsed_formula
